@@ -1,12 +1,16 @@
 import asyncio
+import os
 import signal
 import sys
+import time
 
 from loguru import logger
 
-from dart_noti.config import get_settings
-from dart_noti.services.dart import load_corp_map
 from dart_noti import scheduler
+from dart_noti.config import get_settings
+
+os.environ["TZ"] = "Asia/Seoul"
+time.tzset()
 
 
 def _configure_logging() -> None:
@@ -39,13 +43,7 @@ async def _main() -> None:
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, _handle_signal)
 
-    try:
-        corp_map = await load_corp_map(settings.dart_api_key, settings.watch_corp_codes)
-    except Exception as e:
-        logger.error(f"corp 매핑 로드 실패: {e}")
-        sys.exit(1)
-
-    scheduler_task = asyncio.create_task(scheduler.run(settings, corp_map))
+    scheduler_task = asyncio.create_task(scheduler.run(settings))
     stop_task = asyncio.create_task(stop_event.wait())
 
     done, pending = await asyncio.wait(

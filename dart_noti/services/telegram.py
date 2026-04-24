@@ -13,7 +13,7 @@ _RETRY_DELAY = 5.0
 
 def _format_message(d: Disclosure) -> str:
     market_tag = f"[{d.market}] " if d.market else ""
-    date_str = d.rcept_dt.strftime("%Y-%m-%d %H:%M")
+    date_str = d.rcept_dt.strftime("%Y-%m-%d %H:%M KST")
     return (
         f"<b>{market_tag}{d.corp_name}</b>\n"
         f"{d.report_nm}\n"

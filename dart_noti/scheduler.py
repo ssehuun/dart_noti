@@ -7,12 +7,8 @@ from dart_noti.services import rss, telegram
 from dart_noti.store.seen import SeenStore
 
 
-async def poll_once(
-    settings: Settings,
-    corp_map: dict[str, str],
-    store: SeenStore,
-) -> None:
-    disclosures = await rss.fetch_disclosures(corp_map)
+async def poll_once(settings: Settings, store: SeenStore) -> None:
+    disclosures = await rss.fetch_disclosures()
     if not disclosures:
         return
 
@@ -40,18 +36,18 @@ async def poll_once(
         store.mark_seen(sent)
 
 
-async def run(settings: Settings, corp_map: dict[str, str]) -> None:
+async def run(settings: Settings) -> None:
     store = SeenStore(settings.store_path, settings.seen_retention_days)
     store.evict_old()
 
     logger.info(
         f"스케줄러 시작 — 폴링 주기 {settings.poll_interval_seconds}초 "
-        f"/ 감시 종목 {list(corp_map.values())}"
+        f"/ 유가증권 + 코스닥 전체 공시 감시"
     )
 
     while True:
         try:
-            await poll_once(settings, corp_map, store)
+            await poll_once(settings, store)
         except Exception as e:
             logger.exception(f"폴링 중 예외 발생: {e}")
         await asyncio.sleep(settings.poll_interval_seconds)
