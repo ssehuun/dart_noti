@@ -1,4 +1,5 @@
 import asyncio
+import time as time_module
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
@@ -11,14 +12,22 @@ from dart_noti.models.disclosure import Disclosure
 
 RSS_URL = "https://dart.fss.or.kr/api/todayRSS.xml"
 _DC = "{http://purl.org/dc/elements/1.1/}"
-_TIMEOUT = 10
+_TIMEOUT = 30
+_MAX_FETCH_RETRIES = 3
 _WATCHED_MARKETS = {"유가", "코스닥"}
 KST = timezone(timedelta(hours=9))
 
 
 def _fetch_xml() -> bytes:
-    with urlopen(RSS_URL, timeout=_TIMEOUT) as resp:  # noqa: S310
-        return resp.read()
+    for attempt in range(1, _MAX_FETCH_RETRIES + 1):
+        try:
+            with urlopen(RSS_URL, timeout=_TIMEOUT) as resp:  # noqa: S310
+                return resp.read()
+        except Exception as e:
+            if attempt == _MAX_FETCH_RETRIES:
+                raise
+            logger.warning(f"RSS 요청 실패 ({attempt}/{_MAX_FETCH_RETRIES}): {e}, 재시도 중...")
+            time_module.sleep(2 ** attempt)
 
 
 def _parse_rcp_no(url: str) -> str:

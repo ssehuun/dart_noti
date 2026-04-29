@@ -34,7 +34,7 @@ async def send_notification(token: str, chat_id: str, disclosure: Disclosure) ->
                     parse_mode=ParseMode.HTML,
                     disable_web_page_preview=True,
                 )
-            logger.info(f"알림 발송 완료: {disclosure.corp_name} / {disclosure.rcp_no}")
+            logger.info(f"알림 발송 완료: {disclosure} / {disclosure.corp_name} / {disclosure.rcp_no}")
             return True
         except TelegramError as e:
             logger.warning(f"Telegram 발송 실패 ({attempt}/{_MAX_RETRIES}): {e}")
